@@ -816,7 +816,9 @@ function SO(const Args: array of const): ISuperObject; overload;
 
 function SA(const Args: array of const): ISuperObject; overload;
 
+{$if defined(VER210ORGREATER)}
 function TryObjectToDate(const obj: ISuperObject; var dt: TDateTime): Boolean;
+{$ifend}
 function UUIDToString(const g: TGUID): SOString;
 function StringToUUID(const str: SOString; var g: TGUID): Boolean;
 
@@ -837,7 +839,10 @@ function SOInvoke(const obj: TValue; const method: string; const params: string;
 
 implementation
 uses
-  sysutils, Windows, superdate
+  sysutils, Windows
+{$if defined(VER210ORGREATER)}
+  ,superdate
+{$ifend}
 {$IFDEF FPC}
   ,sockets
 {$ELSE}
@@ -987,6 +992,7 @@ begin
   end;
 end;
 
+{$if defined(VER210ORGREATER)}
 function TryObjectToDate(const obj: ISuperObject; var dt: TDateTime): Boolean;
 var
   i: Int64;
@@ -1010,6 +1016,7 @@ begin
     Result := False;
   end;
 end;
+{$ifend}
 
 function SO(const s: SOString): ISuperObject; overload;
 begin
@@ -1091,7 +1098,9 @@ begin
     varSingle:   Result := TSuperObject.Create(VSingle);
     varDouble:   Result := TSuperObject.Create(VDouble);
     varCurrency: Result := TSuperObject.CreateCurrency(VCurrency);
+{$if defined(VER210ORGREATER)}
     varDate:     Result := TSuperObject.Create(DelphiToJavaDateTime(vDate));
+{$ifend}    
     varOleStr:   Result := TSuperObject.Create(SOString(VOleStr));
     varBoolean:  Result := TSuperObject.Create(VBoolean);
     varShortInt: Result := TSuperObject.Create(VShortInt);
