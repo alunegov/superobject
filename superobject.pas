@@ -760,16 +760,16 @@ type
   TSerialFromJson = function(ctx: TSuperRttiContext; const obj: ISuperObject; var Value: TValue): Boolean;
   TSerialToJson = function(ctx: TSuperRttiContext; var value: TValue; const index: ISuperObject): ISuperObject;
 
-  TSuperAttribute = class(TCustomAttribute)
+  TSuperAttribute<T> = class(TCustomAttribute)
   private
-    FName: string;
+    FValue: T;
   public
-    constructor Create(const AName: string);
-    property Name: string read FName;
+    constructor Create(const aValue: T);
+    property Value: T read FValue;
   end;
 
-  SOName = class(TSuperAttribute);
-  SODefault = class(TSuperAttribute);
+  SOName = class(TSuperAttribute<string>);
+  SODefault = class(TSuperAttribute<string>);
 
 
   TSuperRttiContext = class
@@ -5869,9 +5869,9 @@ end;
 
 { TSuperAttribute }
 
-constructor TSuperAttribute.Create(const AName: string);
+constructor TSuperAttribute<T>.Create(const aValue: T);
 begin
-  FName := AName;
+  FValue := aValue;
 end;
 
 { TSuperRttiContext }
@@ -5903,7 +5903,7 @@ var
 begin
   for o in r.GetAttributes do
     if o is SOName then
-      Exit(SOName(o).Name);
+      Exit(SOName(o).Value);
   Result := r.Name;
 end;
 
@@ -5914,7 +5914,7 @@ begin
   if not ObjectIsType(obj, stNull) then Exit(obj);
   for o in r.GetAttributes do
     if o is SODefault then
-      Exit(SO(SODefault(o).Name));
+      Exit(SO(SODefault(o).Value));
   Result := obj;
 end;
 
