@@ -771,11 +771,19 @@ type
   SOName = class(TSuperAttribute<string>);
   SODefault = class(TSuperAttribute<string>);
 
+  /// <summary>
+  /// Attribute that specifies whether a field or type should be marshalled/unmarshalled.
+  /// </summary>
+  /// <remarks>
+  /// Class name matches the same attribute class name from REST.JsonReflect.
+  /// </remarks>
+  JSONMarshalledAttribute = class(TSuperAttribute<Boolean>);
 
   TSuperRttiContext = class
   private
     class function GetFieldName(r: TRttiField): string;
     class function GetFieldDefault(r: TRttiField; const obj: ISuperObject): ISuperObject;
+    class function ShouldMarshal(r: TRttiField): Boolean;
   public
     Context: TRttiContext;
     SerialFromJson: TDictionary<PTypeInfo, TSerialFromJson>;
@@ -5918,6 +5926,16 @@ begin
   Result := obj;
 end;
 
+class function TSuperRttiContext.ShouldMarshal(r: TRttiField): Boolean;
+var
+  o: TCustomAttribute;
+begin
+  for o in r.GetAttributes do
+    if o is JSONMarshalledAttribute then
+      Exit(JSONMarshalledAttribute(o).Value);
+  Result := True;
+end;
+
 function TSuperRttiContext.AsType<T>(const obj: ISuperObject): T;
 var
   ret: TValue;
@@ -6426,6 +6444,8 @@ function TSuperRttiContext.ToJson(var value: TValue; const index: ISuperObject):
         for f in Context.GetType(Value.AsObject.ClassType).GetFields do
           if f.FieldType <> nil then
           begin
+            if not ShouldMarshal(f) then Continue;
+
             v := f.GetValue(Value.AsObject);
             Result.AsObject[GetFieldName(f)] := ToJson(v, index);
           end
@@ -6453,6 +6473,7 @@ function TSuperRttiContext.ToJson(var value: TValue; const index: ISuperObject):
     Result := TSuperObject.Create(stObject);
     for f in Context.GetType(Value.TypeInfo).GetFields do
     begin
+      if not ShouldMarshal(f) then Continue;
 {$IFDEF VER210}
       v := f.GetValue(IValueData(TValueData(Value).FHeapData).GetReferenceToRawData);
 {$ELSE}
