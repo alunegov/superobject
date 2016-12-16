@@ -757,8 +757,8 @@ type
 {$IFDEF HAVE_RTTI}
   TSuperRttiContext = class;
 
-  TSerialFromJson = function(ctx: TSuperRttiContext; const obj: ISuperObject; var Value: TValue): Boolean;
-  TSerialToJson = function(ctx: TSuperRttiContext; var value: TValue; const index: ISuperObject): ISuperObject;
+  TSerialFromJson = reference to function(ctx: TSuperRttiContext; const obj: ISuperObject; var Value: TValue): Boolean;
+  TSerialToJson = reference to function(ctx: TSuperRttiContext; var value: TValue; const index: ISuperObject): ISuperObject;
 
   TSuperAttribute<T> = class(TCustomAttribute)
   private
