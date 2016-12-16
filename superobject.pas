@@ -6116,7 +6116,7 @@ function TSuperRttiContext.FromJson(TypeInfo: PTypeInfo; const obj: ISuperObject
           if Value.Kind <> tkClass then
             Value := GetTypeData(TypeInfo).ClassType.Create;
           for f in Context.GetType(Value.AsObject.ClassType).GetFields do
-            if f.FieldType <> nil then
+            if (f.FieldType <> nil) and ShouldMarshal(f) then
             begin
               v := TValue.Empty;
               Result := FromJson(f.FieldType.Handle, GetFieldDefault(f, obj.AsObject[GetFieldName(f)]), v);
@@ -6147,7 +6147,7 @@ function TSuperRttiContext.FromJson(TypeInfo: PTypeInfo; const obj: ISuperObject
     TValue.Make(nil, TypeInfo, Value);
     for f in Context.GetType(TypeInfo).GetFields do
     begin
-      if ObjectIsType(obj, stObject) and (f.FieldType <> nil) then
+      if ObjectIsType(obj, stObject) and (f.FieldType <> nil) and ShouldMarshal(f) then
       begin
 {$IFDEF VER210}
         p := IValueData(TValueData(Value).FHeapData).GetReferenceToRawData;
@@ -6442,10 +6442,8 @@ function TSuperRttiContext.ToJson(var value: TValue; const index: ISuperObject):
         Result := TSuperObject.Create(stObject);
         index[IntToStr(NativeInt(Value.AsObject))] := Result;
         for f in Context.GetType(Value.AsObject.ClassType).GetFields do
-          if f.FieldType <> nil then
+          if (f.FieldType <> nil) and ShouldMarshal(f) then
           begin
-            if not ShouldMarshal(f) then Continue;
-
             v := f.GetValue(Value.AsObject);
             Result.AsObject[GetFieldName(f)] := ToJson(v, index);
           end
@@ -6472,15 +6470,15 @@ function TSuperRttiContext.ToJson(var value: TValue; const index: ISuperObject):
   begin
     Result := TSuperObject.Create(stObject);
     for f in Context.GetType(Value.TypeInfo).GetFields do
-    begin
-      if not ShouldMarshal(f) then Continue;
+      if ShouldMarshal(f) then
+      begin
 {$IFDEF VER210}
-      v := f.GetValue(IValueData(TValueData(Value).FHeapData).GetReferenceToRawData);
+        v := f.GetValue(IValueData(TValueData(Value).FHeapData).GetReferenceToRawData);
 {$ELSE}
-      v := f.GetValue(TValueData(Value).FValueData.GetReferenceToRawData);
+        v := f.GetValue(TValueData(Value).FValueData.GetReferenceToRawData);
 {$ENDIF}
-      Result.AsObject[GetFieldName(f)] := ToJson(v, index);
-    end;
+        Result.AsObject[GetFieldName(f)] := ToJson(v, index);
+      end;
   end;
 
   procedure ToArray;
