@@ -825,9 +825,9 @@ function SO(const Args: array of const): ISuperObject; overload;
 
 function SA(const Args: array of const): ISuperObject; overload;
 
-{$IFDEF SO_SUPERDATE}
+{$if defined(VER210ORGREATER)}
 function TryObjectToDate(const obj: ISuperObject; var dt: TDateTime): Boolean;
-{$ENDIF}
+{$ifend}
 function UUIDToString(const g: TGUID): SOString;
 function StringToUUID(const str: SOString; var g: TGUID): Boolean;
 
@@ -849,9 +849,9 @@ function SOInvoke(const obj: TValue; const method: string; const params: string;
 implementation
 uses
   sysutils, Windows
-{$IFDEF SO_SUPERDATE}
+{$if defined(VER210ORGREATER)}
   ,superdate
-{$ENDIF}
+{$ifend}
 {$IFDEF FPC}
   ,sockets
 {$ELSE}
@@ -1001,7 +1001,7 @@ begin
   end;
 end;
 
-{$IFDEF SO_SUPERDATE}
+{$if defined(VER210ORGREATER)}
 function TryObjectToDate(const obj: ISuperObject; var dt: TDateTime): Boolean;
 var
   i: Int64;
@@ -1025,7 +1025,7 @@ begin
     Result := False;
   end;
 end;
-{$ENDIF}
+{$ifend}
 
 function SO(const s: SOString): ISuperObject; overload;
 begin
@@ -1107,11 +1107,9 @@ begin
     varSingle:   Result := TSuperObject.Create(VSingle);
     varDouble:   Result := TSuperObject.Create(VDouble);
     varCurrency: Result := TSuperObject.CreateCurrency(VCurrency);
-{$IFDEF SO_SUPERDATE}
+{$if defined(VER210ORGREATER)}
     varDate:     Result := TSuperObject.Create(DelphiToJavaDateTime(vDate));
-{$ELSE}
-    varDate:     Result := TSuperObject.Create(vDate);
-{$ENDIF}
+{$ifend}    
     varOleStr:   Result := TSuperObject.Create(SOString(VOleStr));
     varBoolean:  Result := TSuperObject.Create(VBoolean);
     varShortInt: Result := TSuperObject.Create(VShortInt);
@@ -1467,11 +1465,7 @@ end;
 
 function serialtodatetime(ctx: TSuperRttiContext; var value: TValue; const index: ISuperObject): ISuperObject;
 begin
-{$IFDEF SO_SUPERDATE}
   Result := TSuperObject.Create(DelphiToJavaDateTime(TValueData(value).FAsDouble));
-{$ELSE}
-  Result := TSuperObject.Create(TValueData(value).FAsDouble);
-{$ENDIF}
 end;
 
 function serialtoguid(ctx: TSuperRttiContext; var value: TValue; const index: ISuperObject): ISuperObject;
@@ -1516,7 +1510,6 @@ begin
 end;
 
 function serialfromdatetime(ctx: TSuperRttiContext; const obj: ISuperObject; var Value: TValue): Boolean;
-{$IFDEF SO_SUPERDATE}
 var
   dt: TDateTime;
   i: Int64;
@@ -1545,19 +1538,6 @@ begin
     Result := False;
   end;
 end;
-{$ELSE}
-begin
-  case ObjectGetType(obj) of
-  stDouble:
-    begin
-      TValueData(Value).FAsDouble := obj.AsDouble;
-      Result := True;
-    end;
-  else
-    Result := False;
-  end;
-end;
-{$ENDIF}
 
 function serialfromguid(ctx: TSuperRttiContext; const obj: ISuperObject; var Value: TValue): Boolean;
 begin
